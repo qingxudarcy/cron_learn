@@ -12,7 +12,7 @@ func main() {
 	var (
 		client *clientv3.Client
 		err    error
-		getRes *clientv3.GetResponse
+		putRes *clientv3.PutResponse
 	)
 
 	config := clientv3.Config{
@@ -24,13 +24,15 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-
 	kv := clientv3.NewKV(client)
 
-	if getRes, err = kv.Get(context.TODO(), "/cron/jobs/", clientv3.WithPrefix()); err != nil {
+	if putRes, err = kv.Put(context.TODO(), "/cron/jobs/job1", "hi chang", clientv3.WithPrevKV()); err != nil {
 		fmt.Println(err)
-		return
 	} else {
-		fmt.Printf("kvs is %v", getRes.Kvs)
+		fmt.Printf("version is %d\n", putRes.Header.Revision)
+		if putRes.PrevKv != nil {
+			fmt.Printf("prekv is %v\n", string(putRes.PrevKv.Value))
+		}
 	}
+
 }
