@@ -27,17 +27,10 @@ func main() {
 
 	kv := clientv3.NewKV(client)
 
-	if getRes, err = kv.Get(context.TODO(), "/cron/jobs/job1", clientv3.WithCountOnly()); err != nil {
+	if getRes, err = kv.Get(context.TODO(), "/cron/jobs/", clientv3.WithPrefix()); err != nil {
 		fmt.Println(err)
 		return
 	} else {
-		fmt.Println(getRes.Count)
-	}
-
-	if getRes, err = kv.Get(context.TODO(), "/cron/jobs/job1"); err != nil {
-		fmt.Println(err)
-		return
-	} else {
-		fmt.Println(getRes.Kvs)
+		fmt.Printf("kvs is %v", getRes.Kvs)
 	}
 }
