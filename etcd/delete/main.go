@@ -10,13 +10,13 @@ import (
 
 func main() {
 	var (
-		client *clientv3.Client
-		err error
+		client  *clientv3.Client
+		err     error
 		delResp *clientv3.DeleteResponse
 	)
 
 	config := clientv3.Config{
-		Endpoints: []string{"124.222.72.252:12379"},
+		Endpoints:   []string{"127.0.0.1:2379"},
 		DialTimeout: 3 * time.Second,
 	}
 
