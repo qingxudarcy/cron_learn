@@ -17,7 +17,7 @@ func main() {
 	)
 
 	config := clientv3.Config{
-		Endpoints:   []string{"127.0.0.1:2379"},
+		Endpoints:   []string{"127.0.0.1:12379"},
 		DialTimeout: 3 * time.Second,
 	}
 
@@ -49,7 +49,13 @@ func main() {
 	fmt.Printf("从%d版本开始监听\n", watchStartRevision)
 
 	watcher := clientv3.NewWatcher(clinet)
-	watchChan := watcher.Watch(context.TODO(), "/cron/jobs/job7", clientv3.WithRev(watchStartRevision)) // 指定监听版本
+
+	ctx, cancelFunc := context.WithCancel(context.TODO())
+	time.AfterFunc(5*time.Second, func() {
+		cancelFunc()
+	})
+
+	watchChan := watcher.Watch(ctx, "/cron/jobs/job7", clientv3.WithRev(watchStartRevision)) // 指定监听版本
 
 	for watchResp := range watchChan {
 		for _, event := range watchResp.Events {
