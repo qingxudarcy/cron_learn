@@ -37,12 +37,19 @@ func main() {
 
 	// 初始化线程
 	initEnv()
+
+	if err = master.InitJobMgr(); err != nil {
+		goto ERR
+	}
+
+	// 初始化web api
 	if err = master.InitApiServer(); err != nil {
 		goto ERR
 	}
 
-
-	return
+	for {
+		select{}
+	}
 
 ERR:
 	fmt.Println(err)

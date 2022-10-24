@@ -1,10 +1,13 @@
 package master
 
 import (
+	"cron/project/common"
+	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"strconv"
-	"time"
+	// "time"
 )
 
 type apiServer struct {
@@ -15,9 +18,32 @@ var (
 	G_apiServer *apiServer
 )
 
+// POST job={"name": ""job1m, "command": "echo hello", "cronExpr": "* * * *"}
+func handleJobSave(w http.ResponseWriter, req *http.Request) {
+	var (
+		err error
+		job common.Job
+		oldJob *common.Job
+	)
+	
 
-func handleJobSave(w http.ResponseWriter, r *http.Request) {
+	// 解析json
+	if err = json.NewDecoder(req.Body).Decode(&job); err != nil {
+		fmt.Print(err)
+	}
+	
+	if oldJob, err = G_jobMgr.SaveJob(&job); err != nil {
+		fmt.Print(err)
+	}
 
+	w.Header().Set("Content-Type", "application/json")
+	if err = common.SuccessRes(w, oldJob); err != nil {
+		fmt.Print(err)
+	}
+
+
+	// ERR:
+	//   _ = common.ErrRes(w, err.Error())
 }
 
 
@@ -39,8 +65,8 @@ func InitApiServer() (err error) {
 
 	// 创建一个http服务
 	httpServer = &http.Server{
-		ReadTimeout: time.Duration(G_config.ApiReadTimeout) * time.Millisecond,
-		WriteTimeout: time.Duration(G_config.ApiWriteTimeout),
+		// ReadTimeout: time.Duration(G_config.ApiReadTimeout) * time.Millisecond,
+		// WriteTimeout: time.Duration(G_config.ApiWriteTimeout),
 		Handler: mux,
 	}
 
