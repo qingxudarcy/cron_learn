@@ -24,14 +24,13 @@ func SuccessRes(w http.ResponseWriter, data interface{}) (err error) {
 		Msg: "success",
 		Data: data,
 	}
-	if err = json.NewEncoder(w).Encode(resp); err != nil {
-		return
-	}
+	json.NewEncoder(w).Encode(resp)
 
 	return
 }
 
 func ErrRes(w http.ResponseWriter, errMsg string) (err error) {
+	w.Header().Set("Content-Type", "application/json")
 	resp := &Response{
 		ErrNo: -1,
 		Msg: errMsg,
@@ -40,7 +39,6 @@ func ErrRes(w http.ResponseWriter, errMsg string) (err error) {
 
 	jsonRes, _ :=  json.Marshal(resp)
 	w.Write(jsonRes)
-	w.Header().Set("Content-Type", "application/json")
 
 	return
 }
