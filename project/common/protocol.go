@@ -17,7 +17,7 @@ type Response struct {
 	Data interface{}  `json:"data"`
 }
 
-func SuccessRes(w http.ResponseWriter, data interface{}) (err error) {
+func SuccessRes(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	resp := &Response{
 		ErrNo: 0,
@@ -25,11 +25,9 @@ func SuccessRes(w http.ResponseWriter, data interface{}) (err error) {
 		Data: data,
 	}
 	json.NewEncoder(w).Encode(resp)
-
-	return
 }
 
-func ErrRes(w http.ResponseWriter, errMsg string) (err error) {
+func ErrRes(w http.ResponseWriter, errMsg string) {
 	w.Header().Set("Content-Type", "application/json")
 	resp := &Response{
 		ErrNo: -1,
@@ -39,6 +37,4 @@ func ErrRes(w http.ResponseWriter, errMsg string) (err error) {
 
 	jsonRes, _ :=  json.Marshal(resp)
 	w.Write(jsonRes)
-
-	return
 }

@@ -13,6 +13,10 @@ type apiServer struct {
 	httpServer *http.Server
 }
 
+type JobNameReq struct {
+	Name string `json:"name"`
+}
+
 var (
 	G_apiServer *apiServer
 )
@@ -24,7 +28,6 @@ func handleJobSave(w http.ResponseWriter, req *http.Request) {
 		job common.Job
 		oldJob *common.Job
 	)
-	
 
 	// 解析json
 	if err = json.NewDecoder(req.Body).Decode(&job); err != nil {
@@ -35,12 +38,32 @@ func handleJobSave(w http.ResponseWriter, req *http.Request) {
 		goto ERR
 	}
 
-	if err = common.SuccessRes(w, oldJob); err != nil {
-		goto ERR
-	}
+	common.SuccessRes(w, oldJob)
 
 	return
 
+
+	ERR:
+	  common.ErrRes(w, err.Error())
+}
+
+func handleJobDelete(w http.ResponseWriter, req *http.Request) {
+	var (
+		err error
+		jobNameReq JobNameReq
+	)
+
+	if err = json.NewDecoder(req.Body).Decode(&jobNameReq); err != nil {
+		goto ERR
+	}
+
+	if err = G_jobMgr.DeleteJob(jobNameReq.Name); err != nil {
+		goto ERR
+	}
+
+	common.SuccessRes(w, nil)
+
+	return
 
 	ERR:
 	  common.ErrRes(w, err.Error())
@@ -58,6 +81,8 @@ func InitApiServer() (err error) {
 	// 配置路由
 	mux = http.NewServeMux()
 	mux.HandleFunc("/job/save", handleJobSave)
+	mux.HandleFunc("/job/delete", handleJobDelete)
+
 
 	if listener, err = net.Listen("tcp", ":" + strconv.Itoa(G_config.ApiPort)); err != nil {
 		return

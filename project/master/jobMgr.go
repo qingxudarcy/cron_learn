@@ -4,6 +4,7 @@ import (
 	"context"
 	"cron/project/common"
 	"encoding/json"
+	"errors"
 	"time"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -72,5 +73,22 @@ func (jobMgr *JobMgr)SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 		return
 	}
 
+	return
+}
+
+func (JobMgr *JobMgr)DeleteJob(jobName string) (err error) {
+	var (
+		jobKey string
+		delResp *clientv3.DeleteResponse
+	)
+
+	jobKey = jobKeyPrefix + jobName
+
+	if delResp, err = JobMgr.kv.Delete(context.TODO(), jobKey, clientv3.WithPrevKV()); err != nil{
+		return
+	}
+	if len(delResp.PrevKvs) == 0 {
+		return errors.New("无法删除不存在的任务")
+	}
 	return
 }
