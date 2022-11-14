@@ -76,7 +76,7 @@ func (jobMgr *JobMgr)SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	return
 }
 
-func (JobMgr *JobMgr)DeleteJob(jobName string) (err error) {
+func (jobMgr *JobMgr)DeleteJob(jobName string) (err error) {
 	var (
 		jobKey string
 		delResp *clientv3.DeleteResponse
@@ -84,11 +84,30 @@ func (JobMgr *JobMgr)DeleteJob(jobName string) (err error) {
 
 	jobKey = jobKeyPrefix + jobName
 
-	if delResp, err = JobMgr.kv.Delete(context.TODO(), jobKey, clientv3.WithPrevKV()); err != nil{
+	if delResp, err = jobMgr.kv.Delete(context.TODO(), jobKey, clientv3.WithPrevKV()); err != nil{
 		return
 	}
 	if len(delResp.PrevKvs) == 0 {
 		return errors.New("无法删除不存在的任务")
+	}
+	return
+}
+
+func (jobMgr *JobMgr)ListJob(jobNameSuffix string) (jobList []*common.Job, err error) {
+	var (
+		getRes *clientv3.GetResponse
+	)
+	jobName := jobKeyPrefix + jobNameSuffix
+	getRes, err = jobMgr.kv.Get(context.TODO(), jobName, clientv3.WithPrefix()); if err != nil {
+		return
+	}
+	jobList = make([]*common.Job, 0, getRes.Count)
+	for _, getResKv := range getRes.Kvs {
+		var job common.Job
+		if err = json.Unmarshal(getResKv.Value, &job); err != nil {
+			return
+		}
+		jobList = append(jobList, &job)
 	}
 	return
 }

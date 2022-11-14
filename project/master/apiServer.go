@@ -69,6 +69,29 @@ func handleJobDelete(w http.ResponseWriter, req *http.Request) {
 	  common.ErrRes(w, err.Error())
 }
 
+func handleJobList(w http.ResponseWriter, req *http.Request) {
+	var (
+		err error
+		jobNameReq JobNameReq
+		jobList []*common.Job
+	)
+	
+	if err = json.NewDecoder(req.Body).Decode(&jobNameReq); err != nil {
+		goto ERR
+	}
+
+	if jobList, err = G_jobMgr.ListJob(jobNameReq.Name); err != nil {
+		goto ERR
+	}
+
+	common.SuccessRes(w, jobList)
+
+	return
+
+	ERR:
+	  common.ErrRes(w, err.Error())
+}
+
 
 // 初始化服务
 func InitApiServer() (err error) {
@@ -82,6 +105,7 @@ func InitApiServer() (err error) {
 	mux = http.NewServeMux()
 	mux.HandleFunc("/job/save", handleJobSave)
 	mux.HandleFunc("/job/delete", handleJobDelete)
+	mux.HandleFunc("/job/list", handleJobList)
 
 
 	if listener, err = net.Listen("tcp", ":" + strconv.Itoa(G_config.ApiPort)); err != nil {
