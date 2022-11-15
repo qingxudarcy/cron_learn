@@ -67,7 +67,10 @@ func (jobMgr *JobMgr)SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	if putRes, err = jobMgr.kv.Put(context.TODO(), jobKey, string(jobValue), clientv3.WithPrevKV()); err != nil {
 		return
 	}
-
+        
+	if putRes.PrevKv == nil {
+		return
+	}
 	if err = json.Unmarshal(putRes.PrevKv.Value, &oldJob); err != nil {
 		err = nil
 		return
