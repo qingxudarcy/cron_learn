@@ -18,6 +18,7 @@ type JobMgr struct {
 
 const (
 	jobKeyPrefix string = "/cron/job/"
+	jobKillerPrefix string = "/cron/killer/"
 )
 
 var (
@@ -52,7 +53,7 @@ func InitJobMgr() (err error) {
 	return
 }
 
-func (jobMgr *JobMgr)SaveJob(job *common.Job) (oldJob *common.Job, err error) {
+func (jobMgr *JobMgr) SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	var(
 		jobKey string
 		jobValue []byte
@@ -79,7 +80,7 @@ func (jobMgr *JobMgr)SaveJob(job *common.Job) (oldJob *common.Job, err error) {
 	return
 }
 
-func (jobMgr *JobMgr)DeleteJob(jobName string) (err error) {
+func (jobMgr *JobMgr) DeleteJob(jobName string) (err error) {
 	var (
 		jobKey string
 		delResp *clientv3.DeleteResponse
@@ -96,7 +97,7 @@ func (jobMgr *JobMgr)DeleteJob(jobName string) (err error) {
 	return
 }
 
-func (jobMgr *JobMgr)ListJob(jobNameSuffix string) (jobList []*common.Job, err error) {
+func (jobMgr *JobMgr) ListJob(jobNameSuffix string) (jobList []*common.Job, err error) {
 	var (
 		getRes *clientv3.GetResponse
 	)
@@ -112,5 +113,26 @@ func (jobMgr *JobMgr)ListJob(jobNameSuffix string) (jobList []*common.Job, err e
 		}
 		jobList = append(jobList, &job)
 	}
+	return
+}
+
+func (jobMgr *JobMgr) KillJob(jobName string) (err error) {
+	var (
+		leaseResp *clientv3.LeaseGrantResponse
+	)
+
+	jobKillerDir := jobKillerPrefix + jobName
+
+	// worker 监听到有put操作 就会进行kill操作  所以只需要设置1s的租约 减少数据冗余
+	if leaseResp, err = jobMgr.lease.Grant(context.TODO(), 1); err != nil {
+		return
+	}
+
+	leaseId := leaseResp.ID
+
+	if _, err = jobMgr.kv.Put(context.TODO(), jobKillerDir, "", clientv3.WithLease(leaseId)); err != nil {
+		return
+	}
+
 	return
 }
