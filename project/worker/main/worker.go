@@ -15,7 +15,7 @@ var (
 func initArgs() {
 	// worker -config ./master.json
 	//worker -h
-	flag.StringVar(&confFile, "config", "./master.json", "指定master.json")
+	flag.StringVar(&confFile, "config", "./worker.json", "指定master.json")
 	flag.Parse()
 }
 
@@ -37,6 +37,8 @@ func main() {
 
 	// 初始化线程
 	initEnv()
+
+	worker.InitScheduler()
 
 	if err = worker.InitJobMgr(); err != nil {
 		goto ERR

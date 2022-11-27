@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
+
+	"github.com/gorhill/cronexpr"
 )
 
 type Job struct {
@@ -28,16 +31,41 @@ func ExtractJobName(key string) (string) {
 }
 
 type JobEvent struct {
-	JonType int // PUT DELETE
+	JobType int // PUT DELETE
 	Job *Job
 }
 
 func InitJobEvent(jobType int, job *Job) (*JobEvent) {
 	return &JobEvent{
-		JonType: jobType,
+		JobType: jobType,
 		Job: job,
 	}
-} 
+}
+
+// 任务调度计划
+type JobSchedulerPlan struct {
+	Job *Job
+	Expr *cronexpr.Expression
+	NextTime time.Time
+}
+
+func BuildJobSchedulerPlan(job *Job) (jobSchedulerPlan *JobSchedulerPlan, err error) {
+	var (
+		expr *cronexpr.Expression
+	)
+
+	if expr, err = cronexpr.Parse(job.CronExpr); err != nil {
+		return
+	}
+
+	jobSchedulerPlan = &JobSchedulerPlan{
+		Job: job,
+		Expr: expr,
+		NextTime: expr.Next(time.Now()),
+	}
+
+	return
+}
 
 type Response struct {
 	ErrNo int  `json:"errNo"`

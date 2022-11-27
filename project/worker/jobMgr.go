@@ -3,10 +3,11 @@ package worker
 import (
 	"context"
 	"cron/project/common"
+	"fmt"
 	"time"
 
-	clientv3 "go.etcd.io/etcd/client/v3"
 	mvccpb "go.etcd.io/etcd/api/v3/mvccpb"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 type JobMgr struct {
@@ -42,13 +43,14 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 			continue   // TODO 打log
 		} else {
 			jobEvent = common.InitJobEvent(common.JobPutEvent, job)
-			// TODO 把这个Job交给shcheduler
+			G_scheduler.PushJobevent(jobEvent)
+			// 把这个Job交给shcheduler
 		}
 	}
 
 	go func() {  // 从revision开始监听后续时间变化
-		watchStartRevision = getRes.Header.Revision	+ 1
-		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JobKeyPrefix, clientv3.WithRev(watchStartRevision))
+		watchStartRevision = getRes.Header.Revision
+		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JobKeyPrefix, clientv3.WithRev(watchStartRevision), clientv3.WithPrefix())
 		for watchRes = range watchChan {
 			for _, event = range watchRes.Events {
 				switch event.Type {
@@ -64,6 +66,7 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 					jobEvent = common.InitJobEvent(common.JobDeleteEvent, &common.Job{Name: jobName})
 				}
 
+				G_scheduler.PushJobevent(jobEvent)
 				// 推给scheduler
 			}
 		}
