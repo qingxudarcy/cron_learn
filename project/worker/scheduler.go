@@ -32,7 +32,7 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 		scheduler.jobPlanTable[jobEvent.Job.Name] = jobSchedulerPlan
 
 	case common.JobDeleteEvent:
-		if jobSchedulerPlan, isExisted = scheduler.jobPlanTable[jobEvent.Job.Name]; isExisted {
+		if _, isExisted = scheduler.jobPlanTable[jobEvent.Job.Name]; isExisted {
 			delete(scheduler.jobPlanTable, jobEvent.Job.Name)
 		}
 	}
@@ -45,9 +45,10 @@ func (scheduler *Scheduler) tryScheduler() (schedulerAfter time.Duration) {
 		now time.Time
 		nearTime *time.Time
 	)
-
-	if len(scheduler.jobPlanTable) == 0 {
-		schedulerAfter = time.Second
+        
+	if len(scheduler.jobPlanTable) == 0 {   // 初始化无任务时，隔500ms去轮询
+		schedulerAfter = 500 * time.Millisecond
+		return
 	}
 
 	now = time.Now()
@@ -90,7 +91,7 @@ func (scheduler *Scheduler) schedulerLoop() {
 		}
 
 		schedulerAfter = scheduler.tryScheduler()
-		schedulerTimer = time.NewTimer(schedulerAfter)
+		schedulerTimer.Reset(schedulerAfter)
 	}
 }
 

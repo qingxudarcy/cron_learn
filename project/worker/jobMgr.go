@@ -3,7 +3,6 @@ package worker
 import (
 	"context"
 	"cron/project/common"
-	"fmt"
 	"time"
 
 	mvccpb "go.etcd.io/etcd/api/v3/mvccpb"
