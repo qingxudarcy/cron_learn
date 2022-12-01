@@ -38,6 +38,8 @@ func main() {
 	// 初始化线程
 	initEnv()
 
+	worker.InitExcuter()
+
 	worker.InitScheduler()
 
 	if err = worker.InitJobMgr(); err != nil {

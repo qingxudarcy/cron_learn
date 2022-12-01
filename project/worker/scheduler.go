@@ -2,6 +2,7 @@ package worker
 
 import (
 	"cron/project/common"
+	"fmt"
 	"time"
 )
 
@@ -9,6 +10,8 @@ import (
 type Scheduler struct {
 	jobEventChan chan *common.JobEvent
 	jobPlanTable map[string]*common.JobSchedulerPlan
+	jobExcuteTable map[string]*common.JobExcuteInfo
+	jobResultChan chan *common.JobExcuteResult
 }
 
 
@@ -38,6 +41,31 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	}
 }
 
+func (scheduler *Scheduler) handleJobResult(jobResult *common.JobExcuteResult) {
+	delete(scheduler.jobExcuteTable, jobResult.JobExcuteInfo.Job.Name)
+
+	fmt.Println("任务执行完成", jobResult.JobExcuteInfo.Job.Name, jobResult.Output, jobResult.Err)
+}
+
+func (scheduler *Scheduler) tryStartJob(jobPlan *common.JobSchedulerPlan) {
+	var (
+		existed bool
+		jobExcuteInfo *common.JobExcuteInfo
+	)
+
+	if _, existed = scheduler.jobExcuteTable[jobPlan.Job.Name]; existed {
+		fmt.Printf("%s 任务在执行，跳过\n", jobPlan.Job.Name)
+		return
+	}
+
+	jobExcuteInfo = common.BuildJobExcuteInfo(jobPlan)
+	scheduler.jobExcuteTable[jobPlan.Job.Name] = jobExcuteInfo
+	
+	fmt.Println("执行任务", jobExcuteInfo.Job.Name, jobExcuteInfo.PlanTime, jobExcuteInfo.RealTime)
+	G_excuter.ExcuteJob(jobExcuteInfo)
+
+}
+
 
 func (scheduler *Scheduler) tryScheduler() (schedulerAfter time.Duration) {
 	var (
@@ -55,7 +83,7 @@ func (scheduler *Scheduler) tryScheduler() (schedulerAfter time.Duration) {
 
 	for _, jobPlan = range scheduler.jobPlanTable {
 		if jobPlan.NextTime.Before(now) || jobPlan.NextTime.Equal(now) {
-			// TODO: 尝试执行任务 前一次任务没结束 则不执行
+			scheduler.tryStartJob(jobPlan)
 			jobPlan.NextTime = jobPlan.Expr.Next(now)
 		}
 
@@ -78,6 +106,7 @@ func (scheduler *Scheduler) schedulerLoop() {
 		jobEvent *common.JobEvent
 		schedulerAfter time.Duration
 		schedulerTimer *time.Timer
+		jobResult *common.JobExcuteResult
 	)
 
 	schedulerAfter = scheduler.tryScheduler()
@@ -88,6 +117,8 @@ func (scheduler *Scheduler) schedulerLoop() {
 		case jobEvent = <- scheduler.jobEventChan:
 			scheduler.handleJobEvent(jobEvent)
 		case <- schedulerTimer.C:  // 最近的任务要执行了
+		case jobResult = <- scheduler.jobResultChan:
+			scheduler.handleJobResult(jobResult)
 		}
 
 		schedulerAfter = scheduler.tryScheduler()
@@ -105,9 +136,15 @@ func InitScheduler() (err error) {
 	G_scheduler = &Scheduler{
 		jobEventChan: make(chan *common.JobEvent, 1000),
 		jobPlanTable: make(map[string]*common.JobSchedulerPlan),
+		jobExcuteTable: make(map[string]*common.JobExcuteInfo),
+		jobResultChan: make(chan *common.JobExcuteResult, 1000),
 	}
 	
 	go G_scheduler.schedulerLoop()
 
 	return
+}
+
+func (scheduler *Scheduler) PushJobResult(jobResult *common.JobExcuteResult) {
+	scheduler.jobResultChan <- jobResult
 }

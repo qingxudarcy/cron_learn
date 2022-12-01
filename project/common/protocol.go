@@ -67,6 +67,31 @@ func BuildJobSchedulerPlan(job *Job) (jobSchedulerPlan *JobSchedulerPlan, err er
 	return
 }
 
+type JobExcuteInfo struct {
+	Job *Job
+	PlanTime time.Time  // 计划执行时间
+	RealTime time.Time  // 实际执行时间
+}
+
+
+func BuildJobExcuteInfo(jobPlan *JobSchedulerPlan) (jobExcuteInfo *JobExcuteInfo) {
+	jobExcuteInfo = &JobExcuteInfo{
+		Job:  jobPlan.Job,
+		PlanTime: jobPlan.NextTime,
+		RealTime: time.Now(),
+	}
+
+	return
+}
+
+type JobExcuteResult struct {
+	JobExcuteInfo *JobExcuteInfo
+	Output string
+	Err error
+	StartTime time.Time
+	EndTime time.Time
+}
+
 type Response struct {
 	ErrNo int  `json:"errNo"`
 	Msg string `json:"msg"`
