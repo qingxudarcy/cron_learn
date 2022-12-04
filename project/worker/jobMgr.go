@@ -109,3 +109,9 @@ func InitJobMgr() (err error) {
 
 	return
 }
+
+func (jobMgr *JobMgr) CreateJobLock(jobName string) (jobLock *JobLock) {
+	jobLock = InitJobLock(jobName, jobMgr.kv, jobMgr.lease)
+
+	return
+}
