@@ -9,4 +9,5 @@ var (
 var (
 	JobDeleteEvent int = 0
 	JobPutEvent int = 1
+	JobKillEvent int = 2
 )

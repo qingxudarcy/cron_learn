@@ -62,7 +62,7 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 				case clientv3.EventTypeDelete:
 					jobName	= common.ExtractJobName(string(event.Kv.Key))
 
-					jobEvent = common.InitJobEvent(common.JobDeleteEvent, &common.Job{Name: jobName})
+					jobEvent = common.InitJobEvent(common.JobKillEvent, &common.Job{Name: jobName})
 				}
 
 				G_scheduler.PushJobevent(jobEvent)
@@ -74,6 +74,35 @@ func (jobMgr *JobMgr) watchJobs() (err error) {
 
 	return
 
+}
+
+func (jobMgr *JobMgr) watchKiller() {
+	var (
+		watchChan clientv3.WatchChan
+		watchResp clientv3.WatchResponse
+		watchEvent *clientv3.Event
+		jobName string
+		jobEvent *common.JobEvent
+	)
+
+	go func() {
+		watchChan = jobMgr.watcher.Watch(context.TODO(), common.JobKillerPrefix, clientv3.WithPrefix())
+		for watchResp = range watchChan {
+			for _, watchEvent = range watchResp.Events {
+				switch watchEvent.Type {
+				case mvccpb.PUT:
+					jobName	= common.ExtractJobName(string(watchEvent.Kv.Key))
+
+					jobEvent = common.InitJobEvent(common.JobDeleteEvent, &common.Job{Name: jobName})
+				}
+
+				G_scheduler.PushJobevent(jobEvent)
+
+			}
+
+		}
+
+	}()
 }
 
 func InitJobMgr() (err error) {
@@ -106,6 +135,9 @@ func InitJobMgr() (err error) {
 	}
 
 	err = G_jobMgr.watchJobs()
+
+	G_jobMgr.watchKiller()
+
 
 	return
 }

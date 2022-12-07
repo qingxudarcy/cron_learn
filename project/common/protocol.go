@@ -30,6 +30,10 @@ func ExtractJobName(key string) (string) {
 	return strings.TrimPrefix(key, JobKeyPrefix)
 }
 
+func ExtractKillerName(killerKey string) (string) {
+	return strings.TrimPrefix(killerKey, JobKillerPrefix)
+}
+
 type JobEvent struct {
 	JobType int // PUT DELETE
 	Job *Job
