@@ -3,6 +3,7 @@ package worker
 import (
 	"context"
 	"cron/project/common"
+	"math/rand"
 	"os/exec"
 	"time"
 )
@@ -32,6 +33,7 @@ func (excuter *Excuter) ExcuteJob(info *common.JobExcuteInfo) {
 
 		jobLock = G_jobMgr.CreateJobLock(info.Job.Name)
 
+		time.Sleep(time.Duration(rand.Intn(1000)) * time.Millisecond)  // 随机睡眠不到1s，解决多个worker出现有worker节点饿死的问题
 		err = jobLock.TryLock()
 		defer jobLock.UnLock()
 
