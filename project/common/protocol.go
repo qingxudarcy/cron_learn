@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
@@ -75,16 +76,26 @@ type JobExcuteInfo struct {
 	Job *Job
 	PlanTime time.Time  // 计划执行时间
 	RealTime time.Time  // 实际执行时间
+	CancelCtx context.Context
+	CancelFunc context.CancelFunc
 }
 
 
 func BuildJobExcuteInfo(jobPlan *JobSchedulerPlan) (jobExcuteInfo *JobExcuteInfo) {
+	var (
+		cancelCtx context.Context
+		cancelFunc context.CancelFunc
+	)
+
+	cancelCtx, cancelFunc  = context.WithCancel(context.Background())
 	jobExcuteInfo = &JobExcuteInfo{
 		Job:  jobPlan.Job,
 		PlanTime: jobPlan.NextTime,
 		RealTime: time.Now(),
+		CancelCtx: cancelCtx,
+		CancelFunc: cancelFunc,
 	}
-
+	
 	return
 }
 

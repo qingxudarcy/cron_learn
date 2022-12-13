@@ -23,7 +23,8 @@ var (
 func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	var (
 		jobSchedulerPlan *common.JobSchedulerPlan
-		isExisted bool	
+		isExisted bool
+		jobExcuteInfo *common.JobExcuteInfo 
 		err error
 	)
 
@@ -37,6 +38,11 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 	case common.JobDeleteEvent:
 		if _, isExisted = scheduler.jobPlanTable[jobEvent.Job.Name]; isExisted {
 			delete(scheduler.jobPlanTable, jobEvent.Job.Name)
+		}
+	case common.JobKillEvent:
+		if jobExcuteInfo, isExisted = scheduler.jobExcuteTable[jobEvent.Job.Name]; isExisted {
+			jobExcuteInfo.CancelFunc()
+			delete(scheduler.jobExcuteTable, jobEvent.Job.Name)
 		}
 	}
 }

@@ -41,7 +41,7 @@ func (excuter *Excuter) ExcuteJob(info *common.JobExcuteInfo) {
 			result.Err = err
 			result.EndTime = time.Now()
 		} else {
-			cmd = exec.CommandContext(context.TODO(), "/bin/bash", "-c", info.Job.Command)
+			cmd = exec.CommandContext(info.CancelCtx, "/bin/bash", "-c", info.Job.Command)
 			output, err = cmd.CombinedOutput()
 			result.EndTime = time.Now()
 			result.Output = string(output)

@@ -93,7 +93,7 @@ func (jobMgr *JobMgr) watchKiller() {
 				case mvccpb.PUT:
 					jobName	= common.ExtractJobName(string(watchEvent.Kv.Key))
 
-					jobEvent = common.InitJobEvent(common.JobDeleteEvent, &common.Job{Name: jobName})
+					jobEvent = common.InitJobEvent(common.JobKillEvent, &common.Job{Name: jobName})
 				}
 
 				G_scheduler.PushJobevent(jobEvent)
