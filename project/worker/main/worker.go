@@ -38,6 +38,11 @@ func main() {
 	// 初始化线程
 	initEnv()
 
+	// 启动日志协程
+	if err = worker.InitLogSink(); err != nil {
+		goto ERR
+	}
+
 	worker.InitExcuter()
 
 	worker.InitScheduler()

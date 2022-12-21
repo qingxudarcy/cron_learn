@@ -48,7 +48,29 @@ func (scheduler *Scheduler) handleJobEvent(jobEvent *common.JobEvent) {
 }
 
 func (scheduler *Scheduler) handleJobResult(jobResult *common.JobExcuteResult) {
+	var (
+		jobLog *common.JobLog
+	)
+
 	delete(scheduler.jobExcuteTable, jobResult.JobExcuteInfo.Job.Name)
+
+	if jobResult.Err != common.ERR_LOCK_ALREADY_REQUIRED {
+		jobLog = &common.JobLog{
+			JobName: jobResult.JobExcuteInfo.Job.Name,
+			Command: jobResult.JobExcuteInfo.Job.Command,
+			Output: jobResult.Output,
+			PlanTime: jobResult.JobExcuteInfo.PlanTime.UnixMilli(),
+			ScheduleTime: jobResult.JobExcuteInfo.RealTime.UnixMilli(),
+			StartTime: jobResult.StartTime.UnixMilli(),
+			EndTime: jobResult.EndTime.UnixMilli(),
+		}
+		if jobResult.Err != nil {
+			jobLog.Err = jobResult.Err.Error()
+		} else {
+			jobLog.Err = ""
+		}
+		G_logSink.logChan <- jobLog
+	}
 
 	fmt.Println("任务执行完成", jobResult.JobExcuteInfo.Job.Name, jobResult.Output, jobResult.Err)
 }

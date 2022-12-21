@@ -1,7 +1,6 @@
 package worker
 
 import (
-	"context"
 	"cron/project/common"
 	"math/rand"
 	"os/exec"
