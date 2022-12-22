@@ -9,6 +9,8 @@ type Config struct {
 	EtcdEndpoints []string `json:"etcdEndpoints"`
 	EtcdDialTimeout int `json:"etcdEtcdDialTimeout"`
 	MongoUri string `json:"mongoUri"`
+	LogBatchSize int `json:"logBatchSize"`
+	LogCommitTimeout int `json:"logCommitTimeout"`
 }
 
 var (

@@ -119,6 +119,10 @@ type JobLog struct {
 	EndTime int64 `bson:"endTime"`
 }
 
+type LogBatch struct {
+	Logs  []interface{}
+}
+
 type Response struct {
 	ErrNo int  `json:"errNo"`
 	Msg string `json:"msg"`
