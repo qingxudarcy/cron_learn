@@ -21,6 +21,10 @@ var (
 	G_logSink *LogSink
 )
 
+func (logSink *LogSink) writeMany(logBatch *common.LogBatch) {
+	logSink.logCollection.InsertMany(context.TODO(), logBatch.Logs)
+}
+
 func (logSink *LogSink) writeLoop() {
 	var (
 		jobLog *common.JobLog
@@ -42,7 +46,7 @@ func (logSink *LogSink) writeLoop() {
 			}
 			logBatch.Logs = append(logBatch.Logs, jobLog)
 			if len(logBatch.Logs) >= G_config.LogBatchSize {
-				logSink.logCollection.InsertMany(context.TODO(), logBatch.Logs)
+				logSink.writeMany(logBatch)	
 				logBatch = nil
 				commitTimer.Stop()
 			}
@@ -50,7 +54,7 @@ func (logSink *LogSink) writeLoop() {
 			if timeoutBatch != logBatch {
 				continue
 			}
-			logSink.logCollection.InsertMany(context.TODO(), timeoutBatch.Logs)
+			logSink.writeMany(timeoutBatch)	
 			logBatch = nil
 		}
 	}

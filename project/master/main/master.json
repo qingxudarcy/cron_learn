@@ -3,5 +3,6 @@
 	"apiReadTimeout": 5000,
 	"apiWriteTimeout": 5000,
 	"etcdEndpoints": ["127.0.0.1:2379"],
-	"etcdDialTimeout": 5000
+	"etcdDialTimeout": 5000,
+	"mongoUri": "mongodb://127.0.0.1:27017"
 }

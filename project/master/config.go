@@ -11,6 +11,7 @@ type Config struct {
 	ApiWriteTimeout int `json:"apiWriteTimeout"`
 	EtcdEndpoints []string `json:"etcdEndpoints"`
 	EtcdDialTimeout int `json:"etcdEtcdDialTimeout"`
+	MongoUri string `json:"mongoUri"`
 }
 
 var (

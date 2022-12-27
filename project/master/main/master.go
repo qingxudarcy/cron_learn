@@ -38,6 +38,10 @@ func main() {
 	// 初始化线程
 	initEnv()
 
+	if err = master.InitJobLogMgr(); err != nil {
+		goto ERR
+	}
+
 	if err = master.InitJobMgr(); err != nil {
 		goto ERR
 	}

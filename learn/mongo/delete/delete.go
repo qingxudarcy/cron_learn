@@ -9,12 +9,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const mongoUrl string = "mongodb://admin:admin123@124.222.72.252:27017/?authSource=admin"
+const mongoUrl string = "mongodb://admin:admin123@127.0.0.1:27017/?authSource=admin"
 
 type TimeBeforeCond struct {
 	Before int64 `bson:"$lt"`
 }
-
 
 type DeleteCond struct {
 	BeforeCond TimeBeforeCond `bson:"timePoint.startTime"`
@@ -22,9 +21,9 @@ type DeleteCond struct {
 
 func main() {
 	var (
-		client *mongo.Client
+		client    *mongo.Client
 		deleteRes *mongo.DeleteResult
-		err    error
+		err       error
 	)
 	if client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(mongoUrl).SetConnectTimeout(5*time.Second)); err != nil {
 		fmt.Println(err)

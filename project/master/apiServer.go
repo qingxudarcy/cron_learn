@@ -3,6 +3,7 @@ package master
 import (
 	"cron/project/common"
 	"encoding/json"
+	"errors"
 	"net"
 	"net/http"
 	"strconv"
@@ -72,15 +73,17 @@ func handleJobDelete(w http.ResponseWriter, req *http.Request) {
 func handleJobList(w http.ResponseWriter, req *http.Request) {
 	var (
 		err error
-		jobNameReq JobNameReq
+		jobName string
 		jobList []*common.Job
 	)
-	
-	if err = json.NewDecoder(req.Body).Decode(&jobNameReq); err != nil {
+
+	if err = req.ParseForm(); err != nil {
 		goto ERR
 	}
 
-	if jobList, err = G_jobMgr.ListJob(jobNameReq.Name); err != nil {
+	jobName = req.FormValue("name")
+
+	if jobList, err = G_jobMgr.ListJob(jobName); err != nil {
 		goto ERR
 	}
 
@@ -88,8 +91,8 @@ func handleJobList(w http.ResponseWriter, req *http.Request) {
 
 	return
 
-	ERR:
-	  common.ErrRes(w, err.Error())
+ERR:
+    common.ErrRes(w, err.Error())
 }
 
 func handleJobKill(w http.ResponseWriter, req *http.Request) {
@@ -115,6 +118,50 @@ func handleJobKill(w http.ResponseWriter, req *http.Request) {
 	   common.ErrRes(w, err.Error())
 }
 
+func handleLogList(w http.ResponseWriter, req *http.Request) {
+	var (
+		err error
+		jobName string
+		pageStr string
+		pageSizeStr string
+		page int
+		pageSize int
+		jobLogList []*common.JobLog
+	)
+
+	if err = req.ParseForm(); err != nil {
+		goto ERR
+	}
+
+	jobName = req.FormValue("name")
+	if jobName == "" {
+		err = errors.New("name can not be empty")
+		goto ERR
+	}
+
+	pageStr = req.FormValue("page")
+	pageSizeStr = req.FormValue("pageSize")
+
+	if page, err = strconv.Atoi(pageStr); err != nil {
+		page = 1
+	}
+
+	if pageSize, err = strconv.Atoi(pageSizeStr); err != nil {
+		pageSize = 10
+	}
+
+	if jobLogList, err = G_jobLogMgr.JobLogList(jobName, int64(page), int64(pageSize)); err != nil {
+		goto ERR
+	}
+
+	common.SuccessRes(w, jobLogList)
+
+	return
+
+ERR:
+    common.ErrRes(w, err.Error())
+}
+
 
 // 初始化服务
 func InitApiServer() (err error) {
@@ -130,6 +177,7 @@ func InitApiServer() (err error) {
 	mux.HandleFunc("/job/delete", handleJobDelete)
 	mux.HandleFunc("/job/list", handleJobList)
 	mux.HandleFunc("/job/kill", handleJobKill)
+	mux.HandleFunc("/job/log", handleLogList)
 
 
 	if listener, err = net.Listen("tcp", ":" + strconv.Itoa(G_config.ApiPort)); err != nil {
