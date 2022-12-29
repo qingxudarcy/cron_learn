@@ -35,6 +35,10 @@ func ExtractKillerName(killerKey string) (string) {
 	return strings.TrimPrefix(killerKey, JobKillerPrefix)
 }
 
+func ExtractNodeIP(key string) (string) {
+	return strings.TrimPrefix(key, JobWorkerDir)
+}
+
 type JobEvent struct {
 	JobType int // PUT DELETE
 	Job *Job

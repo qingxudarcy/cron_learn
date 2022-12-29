@@ -162,6 +162,23 @@ ERR:
     common.ErrRes(w, err.Error())
 }
 
+func handleHealthNode(w http.ResponseWriter, req *http.Request) {
+	var (
+		workerNodes []string
+		err error
+	)
+	if workerNodes, err = G_jobLogMgr.GetWorkerNodes(); err != nil {
+		goto ERR
+	}
+
+	common.SuccessRes(w, workerNodes)
+
+	return
+
+ERR:
+    common.ErrRes(w, err.Error())
+}
+
 
 // 初始化服务
 func InitApiServer() (err error) {
@@ -178,6 +195,7 @@ func InitApiServer() (err error) {
 	mux.HandleFunc("/job/list", handleJobList)
 	mux.HandleFunc("/job/kill", handleJobKill)
 	mux.HandleFunc("/job/log", handleLogList)
+	mux.HandleFunc("/job/healthNode", handleHealthNode)
 
 
 	if listener, err = net.Listen("tcp", ":" + strconv.Itoa(G_config.ApiPort)); err != nil {

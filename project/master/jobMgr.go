@@ -7,6 +7,7 @@ import (
 	"errors"
 	"time"
 
+	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
@@ -127,6 +128,32 @@ func (jobMgr *JobMgr) KillJob(jobName string) (err error) {
 
 	if _, err = jobMgr.kv.Put(context.TODO(), jobKillerDir, "", clientv3.WithLease(leaseId)); err != nil {
 		return
+	}
+
+	return
+}
+
+
+func (jobMrg *JobLogMgr) GetWorkerNodes() (workerNodes []string, err error) {
+	var (
+		getRes *clientv3.GetResponse
+		kv *mvccpb.KeyValue
+		IPKey string
+	)
+
+	if getRes, err = G_jobMgr.kv.Get(context.TODO(), common.JobWorkerDir, clientv3.WithPrefix()); err != nil {
+		return
+	}
+
+	workerNodes = make([]string, 0, getRes.Count)
+
+	if getRes.Count == 0 {
+		return
+	}
+
+	for _, kv = range getRes.Kvs {
+		IPKey = string(kv.Key)
+		workerNodes = append(workerNodes, common.ExtractNodeIP(IPKey))
 	}
 
 	return
